@@ -1,0 +1,38 @@
+!ArenaConfig
+arenas:
+  0: !Arena
+    t: 250
+    items:
+    - !Item
+      name: GoodGoal
+    - !Item
+      name: GoodGoalMulti
+    - !Item
+      name: BadGoal
+  1: !Arena
+    t: 250
+    items:
+    - !Item
+      name: GoodGoal
+    - !Item
+      name: GoodGoalMulti
+    - !Item
+      name: BadGoal
+  2: !Arena
+      t: 250
+      items:
+      - !Item
+        name: GoodGoal
+      - !Item
+        name: GoodGoalMulti
+      - !Item
+        name: BadGoal
+  3: !Arena
+    t: 250
+    items:
+    - !Item
+      name: GoodGoal
+    - !Item
+      name: GoodGoalMulti
+    - !Item
+      name: BadGoal
