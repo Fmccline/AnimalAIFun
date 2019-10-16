@@ -12,7 +12,6 @@ parser.add_argument('--watch', dest='watch_ai', default=False, action='store_tru
 args = parser.parse_args()
 
 watch_ai = args.watch_ai 
-default_arena = 'configs/2-Preferences.yaml'
 
 # ML-agents parameters for training
 env_path = '../env/AnimalAI'
@@ -29,10 +28,13 @@ keep_checkpoints = 5000
 lesson = 0
 run_seed = 1
 docker_target_name = None
-trainer_config_path = 'configs/trainer_config.yaml'
 model_path = './models/{run_id}'.format(run_id=run_id)
 summaries_dir = './summaries'
 maybe_meta_curriculum = None
+
+# My modified parameters
+trainer_config_path = 'configs/curious_trainer_config.yaml'
+default_arena = 'configs/2-Preferences.yaml'
 
 
 def load_config(trainer_config_path):
