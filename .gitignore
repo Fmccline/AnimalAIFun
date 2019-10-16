@@ -3,7 +3,6 @@ env/*
 examples/submission/test_submission/env/*
 !examples/submission/test_submission/env/README.md
 models/
-!models/saved_models/
 summaries/
 submission/
 /.idea
