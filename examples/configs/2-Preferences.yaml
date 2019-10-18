@@ -36,3 +36,49 @@ arenas:
       name: GoodGoalMulti
     - !Item
       name: BadGoal
+  4: !Arena
+    t: 250
+    items:
+    - !Item
+      name: GoodGoal
+    - !Item
+      name: GoodGoalMulti
+    - !Item
+      name: BadGoal
+  5: !Arena
+    t: 250
+    items:
+    - !Item
+      name: GoodGoal
+    - !Item
+      name: GoodGoalMulti
+    - !Item
+      name: BadGoal
+  6: !Arena
+      t: 250
+      items:
+      - !Item
+        name: GoodGoal
+      - !Item
+        name: GoodGoalMulti
+      - !Item
+        name: BadGoal
+  7: !Arena
+    t: 250
+    items:
+    - !Item
+      name: GoodGoal
+    - !Item
+      name: GoodGoalMulti
+    - !Item
+      name: BadGoal
+  8: !Arena
+    t: 250
+    items:
+    - !Item
+      name: GoodGoal
+    - !Item
+      name: GoodGoalMulti
+    - !Item
+      name: BadGoal
+

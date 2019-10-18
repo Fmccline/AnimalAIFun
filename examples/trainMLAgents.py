@@ -35,6 +35,7 @@ maybe_meta_curriculum = None
 # My modified parameters
 trainer_config_path = 'configs/curious_trainer_config.yaml'
 default_arena = 'configs/2-Preferences.yaml'
+number_arenas = 1 if watch_ai else 9
 
 
 def load_config(trainer_config_path):
@@ -63,7 +64,7 @@ def init_environment(env_path, docker_target_name, worker_id, seed):
     docker_training = docker_target_name is not None
 
     return UnityEnvironment(
-        n_arenas=1 if watch_ai else 4,             # Change this to train on more arenas
+        n_arenas=number_arenas,             # Change this to train on more arenas
         file_name=env_path,
         worker_id=worker_id,
         seed=seed,
