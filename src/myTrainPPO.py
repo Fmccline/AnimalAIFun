@@ -24,15 +24,15 @@ def create_env_fn():
 
 env = make_vec_env(create_env_fn, n_envs=1)
 
-# model = PPO2(MlpPolicy, env, verbose=1)
-# model.learn(total_timesteps=10000)
-# print('\n\n\n\nDone learning!\n\n\n\n')
-# model.save("my_ppo_test")
+model = PPO2(MlpPolicy, env, verbose=0)
+model.learn(total_timesteps=int(1e6))
+print('\n\n\n\nDone learning!\n\n\n\n')
+model.save("ppo_v0.0")
 
-model = PPO2.load('my_ppo_test')
+#model = PPO2.load('my_ppo_test')
 
 obs = env.reset()
-for _ in range(10000):
+for _ in range(1000):
     action, _states = model.predict(obs)
     obs, rewards, dones, info = env.step(action)
     env.render()
