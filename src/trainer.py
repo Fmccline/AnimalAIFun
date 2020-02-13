@@ -8,6 +8,7 @@ from stable_baselines.common import make_vec_env
 from stable_baselines import DQN, PPO2
 import random
 import argparse
+import datetime
 
 # Constants
 ENV_PATH = '../env/AnimalAI'
@@ -53,17 +54,18 @@ def create_model(env):
     return model
 
 if __name__ == '__main__':
-
     env = make_vec_env(create_env_fn, n_envs=1)
     model = create_model(env)
 
     if args.save_path is not None:
-        print('\nTraining model now\n')
+        start = datetime.datetime.now()
+        print('\nTraining model now.\n')
         model.learn(total_timesteps=args.total_timesteps)
-        print('\n\n\n\nDone learning!\n\n\n\n')
+        end = datetime.datetime.now()
+        print(f'\n\n\nDone learning!\nTook a total of {round((end - start).seconds / 60 / 60, 2)} hours.\n\n\n')
         model.save(args.save_path)
     elif args.load_path is not None:
-        print("Demonstrating model. Press CTRL-C to exit")
+        print("Demonstrating model. Press CTRL-C to exit.")
         obs = env.reset()
         while True:
             action, _states = model.predict(obs)
