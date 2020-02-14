@@ -20,11 +20,11 @@ parser = argparse.ArgumentParser(description='AnimalAI Agent Trainer')
 
 # Required
 parser.add_argument('-m', '--model', help=f'Model to use {SUPPORTED_MODELS}')
+parser.add_argument('-f', '--model_path', help=f'The file path to the model')
 
 # Optional
-parser.add_argument('-l', '--load_path', help='The file name to load the model from. Training will not happen', default=None)
-parser.add_argument('-s', '--save_path', help='The file name to save the model to', default=None)
-parser.add_argument('-a', '--arena_config', help='The path to the arena YAML config', default='configs/1-Food.yaml')
+parser.add_argument('-i', '--inference', help='Falg to watch model instead of train. Boolean value {0,1}', type=int, default=0)
+parser.add_argument('-a', '--arena_config', help='The path to the arena YAML config', default='configs/base_test.yaml')
 parser.add_argument('-t', '--total_timesteps', help='The total time steps for training', type=int, default=10000)
 parser.add_argument('-v', '--verbose', help='Whether training should be verbose', type=int, default=0)
 
@@ -40,34 +40,36 @@ def create_env_fn():
                     retro=True)
     return env
 
-def create_model(env):
+def get_model():
     modelType = args.model
     if modelType not in SUPPORTED_MODELS.keys():
         raise ValueError(f'Model type {modelType} is not supported. Use a model in this list: {SUPPORTED_MODELS.keys()}')
-
-    if args.load_path is not None:
-        model = SUPPORTED_MODELS[modelType].load(args.load_path)
-    elif args.save_path is not None:
-        model = SUPPORTED_MODELS[modelType]('MlpPolicy', env, verbose=args.verbose)
-    else:
-        raise ValueError(f'Must provide a model to load from or save to with "-l" or "-s"')
+    model = SUPPORTED_MODELS[modelType]
     return model
+
 
 if __name__ == '__main__':
     env = make_vec_env(create_env_fn, n_envs=1)
-    model = create_model(env)
-
-    if args.save_path is not None:
-        start = datetime.datetime.now()
-        print('\nTraining model now.\n')
-        model.learn(total_timesteps=args.total_timesteps)
-        end = datetime.datetime.now()
-        print(f'\n\n\nDone learning!\nTook a total of {round((end - start).seconds / 60 / 60, 2)} hours.\n\n\n')
-        model.save(args.save_path)
-    elif args.load_path is not None:
+    modelType = get_model()
+    modelPath = args.model_path
+    if args.inference != 0:
+        model = modelType.load(modelPath)
         print("Demonstrating model. Press CTRL-C to exit.")
         obs = env.reset()
         while True:
             action, _states = model.predict(obs)
             obs, rewards, dones, info = env.step(action)
             env.render()
+    else:
+        model = modelType('MlpPolicy', env, verbose=args.verbose)
+        start = datetime.datetime.now()
+        print(f'\nTraining model now at {start}\n')
+        try:
+            model.learn(total_timesteps=args.total_timesteps)
+            print('Done training!')
+        except KeyboardInterrupt:
+            print('\nKeyboard Interrupt. Saving model then exiting program.')
+        finally:
+            end = datetime.datetime.now()
+            model.save(modelPath)
+            print(f'Trained for {round((end - start).seconds / 60 / 60, 2)} hours.\nSaved model to {modelPath}')
