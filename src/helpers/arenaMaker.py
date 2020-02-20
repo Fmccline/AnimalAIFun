@@ -127,6 +127,20 @@ class YMazeArena:
         return self.arena.makeYAML()
 
 
+class BaselineArena:
+
+    def __init__(self, n_arenas, time):
+        self.arena = ArenaToYAML(n_arenas, time)
+        items = [Item('GoodGoal'), Item('BadGoal')]
+        self.arena.addItems(items)
+
+    def makeYAML(self):
+        return self.arena.makeYAML()
+
+
+
 if __name__ == '__main__':
-    y_maze = YMazeArena(30, 30)
-    print(y_maze.makeYAML())
+    # y_maze = YMazeArena(30, 30)
+    # print(y_maze.makeYAML())
+    baseline = BaselineArena(25, 1000)
+    print(baseline.makeYAML())

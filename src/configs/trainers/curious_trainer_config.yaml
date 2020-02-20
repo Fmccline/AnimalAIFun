@@ -1,0 +1,27 @@
+# PPO Hyperparameters https://github.com/Unity-Technologies/ml-agents/blob/master/docs/Training-PPO.md
+default:
+    trainer: ppo
+
+Learner:
+    trainer: ppo
+    epsilon: 0.2 # 0.1 - 0.3
+    gamma: 0.99
+    lambd: 0.95
+    learning_rate: 1.0e-5 # 1e-5 - 1e-7
+    memory_size: 256 # multiple of 4 only used for recurrent
+    normalize: false
+    sequence_length: 64
+    summary_freq: 1000
+    use_recurrent: false
+    use_curiosity: true
+    curiosity_strength: 0.02
+    curiosity_enc_size: 256
+    time_horizon: 128
+    batch_size: 64
+    buffer_size: 2048 # multiple of batch size
+    hidden_units: 256 # 32 - 512
+    num_layers: 1 # 1 - 3
+    beta: 1.0e-2 # 1e-4 - 1e-2
+    max_steps: 5.0e6
+    num_epoch: 3
+
