@@ -76,8 +76,20 @@ class TMazeArena(ArenaToYAML):
         walls.addColor(random_color=self.random_colors)
 
     def makeGoals(self):
+        offset = 3
+        goalPositions = [offset, self.MAX_SIZE - offset]
+        goodPos = random.choice(goalPositions)
+        badPos = goalPositions[0] if goalPositions[0] != goodPos else goalPositions[1]
+        zPos= self.t_height + (self.MAX_SIZE - self.t_height)/2
+        
         goodGoal = Item('GoodGoal')
+        goodGoal.addPosition(goodPos, 0, zPos)
+        goodGoal.addRotation(0)
+
         badGoal = Item('BadGoal')
+        badGoal.addPosition(badPos, 0, zPos)
+        badGoal.addRotation(0)
+
         return [goodGoal, badGoal]
 
     def makeAgent(self):
