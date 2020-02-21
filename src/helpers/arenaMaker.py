@@ -5,30 +5,30 @@ class ArenaToYAML:
 
     MAX_SIZE = 40
 
-    def __init__(self, n_arenas=1, time=500):
-        self.n_arenas = n_arenas
-        self.time = time
-        self.items = []
+    def __init__(self):
+        self.arenas = []
 
-    def addItems(self, items):
-        self.items += items
+    def addArena(self, time, items):
+        self.arenas.append((time, items))
 
     def makeYAML(self):
         header = ['!ArenaConfig', 'arenas:']
         as_yaml = '\n'.join(header)
 
-        for arena in range(self.n_arenas):
-            as_yaml += f'\n  {arena}: !Arena'
-            as_yaml += f'\n    t: {self.time}\n'
+        for n in range(len(self.arenas)):
+            arena = self.arenas[n]
+            time = arena[0]
+            items = arena[1]
+
+            as_yaml += f'\n  {n}: !Arena'
+            as_yaml += f'\n    t: {time}\n'
 
             item_yaml = ['    items:']
-            for item in self.items:
+            for item in items:
                 item_yaml.append('    - !Item')
                 item_props = '      ' + '\n      '.join(item.makeYAML())
                 item_yaml.append(item_props)
-                
             as_yaml += '\n'.join(item_yaml)
-
         return as_yaml
 
 
@@ -95,14 +95,16 @@ class YMazeArena:
     WALL_THICKNESS = 0.2
     WALL_HEIGHT = 7
 
-    def __init__(self, corridor_width, y_wall_length, y_angle, random_colors):
+    def __init__(self, n_arenas, time, corridor_width, y_wall_length, y_angle, random_colors):
+        self.n_arenas = n_arenas
         self.corridor_width = corridor_width
         self.y_wall_length = y_wall_length
         self.y_angle = y_angle
         self.random_colors = random_colors
-        self.arena = ArenaToYAML()
-        items = self.makeItems()
-        self.arena.addItems(items)
+        self.arenas = ArenaToYAML()
+        for _ in range(n_arenas):
+            items = self.makeItems()
+            self.arenas.addArena(time, items)
 
     def makeItems(self):
         walls = self.makeWalls()
@@ -191,15 +193,15 @@ class YMazeArena:
         return [agent]
 
     def makeYAML(self):
-        return self.arena.makeYAML()
+        return self.arenas.makeYAML()
 
 
 class BaselineArena:
 
     def __init__(self, n_arenas, time):
-        self.arena = ArenaToYAML(n_arenas, time)
+        self.arena = ArenaToYAML()
         items = [Item('GoodGoal'), Item('BadGoal')]
-        self.arena.addItems(items)
+        self.arena.addArena(time, items)
 
     def makeYAML(self):
         return self.arena.makeYAML()
@@ -207,11 +209,11 @@ class BaselineArena:
 
 
 if __name__ == '__main__':
-    path = '../configs/curriculums/y_maze/'
     n_arenas = 5
-    for n in range(n_arenas):
-        y_maze = YMazeArena(ArenaToYAML.MAX_SIZE / 4, y_wall_length=15, y_angle=30, random_colors=False)
-        file_name = f'{path}y_maze{n}.yaml'
-        with open(file_name, 'w') as file:
-            file.write(y_maze.makeYAML())
-            print(f'Wrote arena to {file_name}')
+    time = 500
+    corridor_width = ArenaToYAML.MAX_SIZE / 4
+    y_wall_length=15
+    y_angle=30
+    random_colors = False
+    y_maze = YMazeArena(n_arenas, time, corridor_width, y_wall_length, y_angle, random_colors)
+    print(y_maze.makeYAML())

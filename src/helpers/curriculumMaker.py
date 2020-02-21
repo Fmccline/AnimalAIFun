@@ -2,13 +2,14 @@ from arenaMaker import YMazeArena, ArenaToYAML
 import json
 
 
-def makeArenas(path, n_arenas):
+def makeArenas(path, n_arenas, n_agents):
     for n in range(n_arenas):
-        corridor_length = ArenaToYAML.MAX_SIZE / 4
+        time = 500
+        corridor_width = ArenaToYAML.MAX_SIZE / 4
         y_wall_length=15
         y_angle=30
         random_colors = False
-        y_maze = YMazeArena(corridor_length, y_wall_length, y_angle, random_colors)
+        y_maze = YMazeArena(n_agents, time, corridor_width, y_wall_length, y_angle, random_colors)
 
         file_name = f'{path}y_maze{n}.yaml'
         with open(file_name, 'w') as file:
@@ -43,5 +44,6 @@ def makeCurriculum(path, n_arenas):
 if __name__ == '__main__':
     path = './configs/curriculums/y_maze/'
     n_arenas = 10
-    makeArenas(path, n_arenas)
+    n_agents = 9
+    makeArenas(path, n_arenas, n_agents)
     makeCurriculum(path, n_arenas)

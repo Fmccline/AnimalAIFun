@@ -45,7 +45,7 @@ maybe_meta_curriculum = MetaCurriculum(curriculum_file)
 # My modified parameters
 trainer_config_path = 'configs/trainers/curious_trainer_config.yaml'
 default_arena = 'configs/arenas/baseline_arena.yaml'
-number_arenas = 1 if watch_ai else 16
+number_arenas = 1 if watch_ai else 9
 
 def load_config(trainer_config_path):
     try:
