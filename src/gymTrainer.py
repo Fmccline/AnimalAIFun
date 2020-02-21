@@ -24,7 +24,7 @@ parser.add_argument('-f', '--model_path', help=f'The file path to the model')
 
 # Optional
 parser.add_argument('-i', '--inference', help='Falg to watch model instead of train. Boolean value {0,1}', type=int, default=0)
-parser.add_argument('-a', '--arena_config', help='The path to the arena YAML config', default='configs/base_test.yaml')
+parser.add_argument('-a', '--arena_config', help='The path to the arena YAML config', default='configs/arenas/base_test.yaml')
 parser.add_argument('-t', '--total_timesteps', help='The total time steps for training', type=int, default=10000)
 parser.add_argument('-v', '--verbose', help='Whether training should be verbose', type=int, default=0)
 
@@ -37,7 +37,7 @@ def create_env_fn():
                     n_arenas=1,
                     arenas_configurations=ArenaConfig(args.arena_config),
                     docker_training=False,
-                    retro=True)
+                    retro=False)
     return env
 
 def get_model():

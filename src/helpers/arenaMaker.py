@@ -1,4 +1,5 @@
 import math
+import random
 
 class ArenaToYAML:
 
@@ -39,9 +40,18 @@ class Item:
         if name not in self.NAMES:
             raise ValueError(f'{name} is not a valid item. Select from {self.NAMES}')
         self.name = name
+        self.colors = []
         self.positions = []
         self.rotations = []
         self.sizes = []
+
+    def addColor(self, r=153, g=153, b=153, random_color=False):
+        # default to grey
+        if random_color:
+            r = -1
+            g = -1 
+            b = -1
+        self.colors.append(f'- !RGB {{r: {r}, g: {g}, b: {b}}}')
 
     def addPosition(self, x, y, z):
         self.addVec3(self.positions, x, y, z)
@@ -69,6 +79,11 @@ class Item:
             for size in self.sizes:
                 yaml_list.append(size)
 
+        if self.colors:
+            yaml_list.append(f'colors:')
+            for color in self.colors:
+                yaml_list.append(color)
+
         if self.rotations:
             yaml_list.append(f'rotations: {str(self.rotations)}')
 
@@ -77,50 +92,102 @@ class Item:
 
 class YMazeArena:
 
+    WALL_THICKNESS = 0.2
+    WALL_HEIGHT = 7
 
-    def __init__(self, y_wall_length, y_angle):
+    def __init__(self, corridor_width, y_wall_length, y_angle, random_colors):
+        self.corridor_width = corridor_width
         self.y_wall_length = y_wall_length
         self.y_angle = y_angle
+        self.random_colors = random_colors
         self.arena = ArenaToYAML()
         items = self.makeItems()
         self.arena.addItems(items)
 
     def makeItems(self):
-        walls = self.makeYWalls()
+        walls = self.makeWalls()
         goals = self.makeGoals()
         agent = self.makeAgent()
         return walls + goals + agent
 
-    def makeYWalls(self):
-        length = self.y_wall_length
-        x = ArenaToYAML.MAX_SIZE / 2
-        z = ArenaToYAML.MAX_SIZE-length
-        y = 0
-        thickness = 0.2
-        rotations = [90 - self.y_angle/2, 90 + self.y_angle/2]
+    def makeWalls(self):
         walls = Item('Wall')
-        for rotation in rotations:
-            self.addYWall(walls, x, y, z, length, thickness, rotation)
+        self.makeYWalls(walls)
+        self.makeCorridorWalls(walls)
+        self.makeFloor(walls)
         return [walls]
 
-    def addYWall(self, walls, x, y, z, length, thickness, rotation):
+    def makeFloor(self, walls):
+        x = 20
+        z = (ArenaToYAML.MAX_SIZE - self.y_wall_length) / 2
+        y = 1
+
+        walls.addPosition(x, y, z)
+        walls.addRotation(0)
+        walls.addSize(self.corridor_width - 0.5, 0.5, z * 2 - 0.5)
+        walls.addColor(random_color=self.random_colors)
+
+    def makeYWalls(self, walls):
+        length = self.y_wall_length
+        x = ArenaToYAML.MAX_SIZE/2
+        z = ArenaToYAML.MAX_SIZE - length
+        y = 0
+        rotations = [90 - self.y_angle/2, 90 + self.y_angle/2]
+        for rotation in rotations:
+            self.addYWall(walls, x, y, z, length, rotation)
+
+    def addYWall(self, walls, x, y, z, length, rotation):
         delta_x = math.cos(rotation * 2 * math.pi / 360) * length / 2 
         delta_z = math.sin(rotation * 2 * math.pi / 360) * length / 2
 
+        thickness = self.WALL_THICKNESS
         delta_x = delta_x + thickness/2 if delta_x > 0 else delta_x - thickness/2
 
         walls.addPosition(x-delta_x, y, z+delta_z)
         walls.addRotation(rotation)
-        walls.addSize(length, 5, thickness)
+        walls.addSize(length, self.WALL_HEIGHT, thickness)
+        walls.addColor(random_color=self.random_colors)
+
+        if delta_x > 0:
+            delta_x += self.corridor_width / 2
+        else:
+            delta_x -= self.corridor_width / 2
+        walls.addPosition(x-delta_x, y, z+delta_z)
+        walls.addRotation(rotation)
+        walls.addSize(length, self.WALL_HEIGHT, thickness)
+        walls.addColor(random_color=self.random_colors)
+
+    def makeCorridorWalls(self, walls):
+        max_size = ArenaToYAML.MAX_SIZE
+        half_size = max_size / 2
+        length = max_size - self.y_wall_length
+        xs = [half_size - self.corridor_width/2, half_size + self.corridor_width/2]
+        z = length / 2
+        y = 0
+        for x in xs:
+            walls.addPosition(x, y, z)
+            walls.addRotation(0)
+            walls.addSize(self.WALL_THICKNESS, self.WALL_HEIGHT, length)
+            walls.addColor(random_color=self.random_colors)
 
     def makeGoals(self):
+        delta_x = math.sin(self.y_angle/2 * 2*math.pi/360) * self.y_wall_length + self.corridor_width/4
+        delta_x = delta_x * random.choice([1, -1]) # randomize start of good/bad goal
+        x = 20
+        y = 0
+        z = 38
+
         goodGoal = Item('GoodGoal')
+        goodGoal.addPosition(x + delta_x, y, z)
+
         badGoal = Item('BadGoal')
+        badGoal.addPosition(x - delta_x, y, z)
         return [goodGoal, badGoal]
 
     def makeAgent(self):
         agent = Item('Agent')
-        agent.addPosition(20,0,1)
+        agent.addPosition(20,1.5,1)
+        agent.addRotation(0)
         return [agent]
 
     def makeYAML(self):
@@ -140,7 +207,11 @@ class BaselineArena:
 
 
 if __name__ == '__main__':
-    # y_maze = YMazeArena(30, 30)
-    # print(y_maze.makeYAML())
-    baseline = BaselineArena(25, 1000)
-    print(baseline.makeYAML())
+    path = '../configs/curriculums/y_maze/'
+    n_arenas = 5
+    for n in range(n_arenas):
+        y_maze = YMazeArena(ArenaToYAML.MAX_SIZE / 4, y_wall_length=15, y_angle=30, random_colors=False)
+        file_name = f'{path}y_maze{n}.yaml'
+        with open(file_name, 'w') as file:
+            file.write(y_maze.makeYAML())
+            print(f'Wrote arena to {file_name}')

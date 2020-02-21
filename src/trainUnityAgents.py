@@ -2,6 +2,7 @@ from animalai_train.trainers.trainer_controller import TrainerController
 from animalai.envs import UnityEnvironment
 from animalai.envs.exception import UnityEnvironmentException
 from animalai.envs.arena_config import ArenaConfig
+from animalai_train.trainers.meta_curriculum import MetaCurriculum
 import random
 import yaml
 import sys
@@ -30,7 +31,7 @@ base_port = 5005
 sub_id = 1
 run_id = args.model_name
 save_freq = 5000
-curriculum_file = None
+curriculum_file = './configs/curriculums/y_maze/'
 load_model = not new_model
 train_model = not watch_ai
 keep_checkpoints = 5000
@@ -39,13 +40,12 @@ run_seed = 1
 docker_target_name = None
 model_path = './models/{run_id}'.format(run_id=run_id)
 summaries_dir = './summaries'
-maybe_meta_curriculum = None
+maybe_meta_curriculum = MetaCurriculum(curriculum_file)
 
 # My modified parameters
 trainer_config_path = 'configs/trainers/curious_trainer_config.yaml'
 default_arena = 'configs/arenas/baseline_arena.yaml'
 number_arenas = 1 if watch_ai else 16
-
 
 def load_config(trainer_config_path):
     try:

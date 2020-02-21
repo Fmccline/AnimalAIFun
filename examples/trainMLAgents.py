@@ -8,7 +8,7 @@ import sys
 import argparse
 
 parser = argparse.ArgumentParser(description='My arg parser')
-parser.add_argument('--watch', dest='watch_ai', default=False, action='store_true', help='Boolean for whether user wants to watch the AI or not.')
+parser.add_argument('-w', '--watch', dest='watch_ai', default=False, action='store_true', help='Boolean for whether user wants to watch the AI or not.')
 args = parser.parse_args()
 
 watch_ai = args.watch_ai 
