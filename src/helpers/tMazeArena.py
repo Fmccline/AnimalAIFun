@@ -1,0 +1,87 @@
+import math
+import random
+from arenaToYaml import ArenaToYAML, Item
+
+class TMazeArena(ArenaToYAML):
+
+    WALL_THICKNESS = 0.2
+    WALL_HEIGHT = 7
+
+    def __init__(self, n_arenas, time, t_width, t_height, div_height, random_colors):
+        super().__init__()
+        self.t_width = t_width
+        self.t_height = t_height
+        self.div_height = div_height
+        self.random_colors = random_colors
+        for _ in range(n_arenas):
+            items = self.makeItems()
+            self.addArena(time, items)
+
+    def makeItems(self):
+        walls = self.makeWalls()
+        goals = self.makeGoals()
+        agent = self.makeAgent()
+        return walls + goals + agent
+
+    def makeWalls(self):
+        walls = Item('Wall')
+        self.makeUpperT(walls)
+        self.makeMidDivider(walls)
+        self.makeLeftDivider(walls)
+        self.makeRightDivider(walls)
+        return [walls]
+
+    def makeUpperT(self, walls):
+        size = self.MAX_SIZE
+        x = self.MAX_SIZE/2
+        z = self.MAX_SIZE - self.WALL_THICKNESS
+        y = 0
+        rotation = 0
+        self.addWall(walls, x, y, z, size, rotation)
+
+    def makeMidDivider(self, walls):
+        size = self.div_height
+        x = self.MAX_SIZE/2
+        z = self.MAX_SIZE - size/2 - self.WALL_THICKNESS*2
+        y = 0
+        rotation = 90
+        self.addWall(walls, x, y, z, size, rotation)
+
+    def makeLeftDivider(self, walls):
+        xl = (self.MAX_SIZE - self.t_width) / 2
+        zl = self.t_height
+        x = xl / 2
+        z = zl / 2
+        y = 0
+        self.addFilledWall(walls, x, y, z, xl, zl)
+
+    def makeRightDivider(self, walls):
+        xl = (self.MAX_SIZE - self.t_width) / 2
+        zl = self.t_height
+        x = self.MAX_SIZE - xl / 2
+        z = zl / 2
+        y = 0
+        self.addFilledWall(walls, x, y, z, xl, zl)
+
+    def addWall(self, walls, x, y, z, size, rotation):
+        walls.addPosition(x, y, z)
+        walls.addRotation(rotation)
+        walls.addSize(size, self.WALL_HEIGHT, self.WALL_THICKNESS)
+        walls.addColor(random_color=self.random_colors)
+
+    def addFilledWall(self, walls, x, y, z, xl, zl):
+        walls.addPosition(x, y, z)
+        walls.addRotation(0)
+        walls.addSize(xl, self.WALL_HEIGHT, zl)
+        walls.addColor(random_color=self.random_colors)
+
+    def makeGoals(self):
+        goodGoal = Item('GoodGoal')
+        badGoal = Item('BadGoal')
+        return [goodGoal, badGoal]
+
+    def makeAgent(self):
+        agent = Item('Agent')
+        agent.addPosition(20,1.5,1)
+        agent.addRotation(0)
+        return [agent]
