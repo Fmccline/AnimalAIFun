@@ -6,24 +6,33 @@ import random
 import yaml
 import sys
 import argparse
+import datetime
 
 parser = argparse.ArgumentParser(description='My arg parser')
+parser.add_argument('-a', '--arena_config', dest='arena_config', default=None, help='Path to arena config')
+parser.add_argument('-f', '--model_name', dest='model_name', help='Name of model to train.')
 parser.add_argument('-w', '--watch', dest='watch_ai', default=False, action='store_true', help='Boolean for whether user wants to watch the AI or not.')
+parser.add_argument('-n', '--new_model', dest='new_model', default=False, action='store_true', help='Boolean for whether to create a new model or load from an existing model.')
+
 args = parser.parse_args()
 
 watch_ai = args.watch_ai 
-
+if args.new_model:
+    do_it = input('Are you sure you want to create a new model? (y/n)\n')
+    new_model = True if do_it == 'y' or do_it == 'Y' else False
+else:
+    new_model = False
 # ML-agents parameters for training
 env_path = '../env/AnimalAI'
 worker_id = random.randint(1, 100)
 seed = 10
 base_port = 5005
 sub_id = 1
-run_id = 'ppo_5M_baseline'
+run_id = args.model_name
 save_freq = 5000
 curriculum_file = None
-load_model = False
-train_model = True
+load_model = not new_model
+train_model = not watch_ai
 keep_checkpoints = 5000
 lesson = 0
 run_seed = 1
@@ -35,7 +44,7 @@ maybe_meta_curriculum = None
 # My modified parameters
 trainer_config_path = 'configs/trainers/curious_trainer_config.yaml'
 default_arena = 'configs/arenas/baseline_arena.yaml'
-number_arenas = 1 if watch_ai else 25
+number_arenas = 1 if watch_ai else 16
 
 
 def load_config(trainer_config_path):
@@ -74,14 +83,9 @@ def init_environment(env_path, docker_target_name, worker_id, seed):
     )
 
 
-# If no configuration file is provided we default to all objects placed randomly
-print(f'Received args: {sys.argv}')
-if len(sys.argv) > 2:
-    arena_config_in = ArenaConfig(sys.argv[2])
-else:
-    print(f"Loading arena: {default_arena}.")
-    arena_config_in = ArenaConfig(default_arena)
-    print("Loaded areana.")
+# If no configuration file is provided we use the default arena
+arena = default_arena if args.arena_config is None else args.arena_config
+arena_config_in = ArenaConfig(arena)
 
 trainer_config = load_config(trainer_config_path)
 env = init_environment(env_path, docker_target_name, worker_id, run_seed)
@@ -95,4 +99,8 @@ tc = TrainerController(model_path, summaries_dir, run_id + '-' + str(sub_id),
                        save_freq, maybe_meta_curriculum,
                        load_model, train_model,
                        keep_checkpoints, lesson, external_brains, run_seed, arena_config_in)
+start = datetime.datetime.now()
 tc.start_learning(env, trainer_config)
+end = datetime.datetime.now()
+total_time = end - start
+print(f'Finished training after {round(total_time.seconds / 60 / 60, 3)} hours.')
