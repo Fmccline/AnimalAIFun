@@ -15,6 +15,7 @@ parser.add_argument('-f', '--model_name', dest='model_name', help='Name of model
 parser.add_argument('-w', '--watch', dest='watch_ai', default=False, action='store_true', help='Boolean for whether user wants to watch the AI or not.')
 parser.add_argument('-n', '--new_model', dest='new_model', default=False, action='store_true', help='Boolean for whether to create a new model or load from an existing model.')
 parser.add_argument('-c', '--curriculum', dest='curriculum', default=None, help='Optional name of curriculum to train from')
+parser.add_argument('-d', '--num_agents', dest='num_agents', default=None, help='Optional name of curriculum to train from', type=int)
 
 args = parser.parse_args()
 
@@ -48,7 +49,7 @@ maybe_meta_curriculum = None if curriculum_type is None else MetaCurriculum(curr
 # My modified parameters
 trainer_config_path = 'configs/trainers/curious_trainer_config.yaml'
 default_arena = 'configs/arenas/baseline_arena.yaml'
-number_arenas = 1 if watch_ai else 9
+number_arenas = 1 if watch_ai else args.num_agents
 
 def load_config(trainer_config_path):
     try:
