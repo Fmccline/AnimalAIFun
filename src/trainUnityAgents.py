@@ -14,15 +14,18 @@ parser.add_argument('-a', '--arena_config', dest='arena_config', default=None, h
 parser.add_argument('-f', '--model_name', dest='model_name', help='Name of model to train.')
 parser.add_argument('-w', '--watch', dest='watch_ai', default=False, action='store_true', help='Boolean for whether user wants to watch the AI or not.')
 parser.add_argument('-n', '--new_model', dest='new_model', default=False, action='store_true', help='Boolean for whether to create a new model or load from an existing model.')
+parser.add_argument('-c', '--curriculum', dest='curriculum', default=None, help='Optional name of curriculum to train from')
 
 args = parser.parse_args()
 
 watch_ai = args.watch_ai 
+curriculum_type = args.curriculum
 if args.new_model:
     do_it = input('Are you sure you want to create a new model? (y/n)\n')
     new_model = True if do_it == 'y' or do_it == 'Y' else False
 else:
     new_model = False
+
 # ML-agents parameters for training
 env_path = '../env/AnimalAI'
 worker_id = random.randint(1, 100)
@@ -31,7 +34,7 @@ base_port = 5005
 sub_id = 1
 run_id = args.model_name
 save_freq = 5000
-curriculum_file = './configs/curriculums/y_maze/'
+curriculum_file = None if curriculum_type is None else f'./configs/curriculums/{curriculum_type}/'
 load_model = not new_model
 train_model = not watch_ai
 keep_checkpoints = 5000
@@ -40,7 +43,7 @@ run_seed = 1
 docker_target_name = None
 model_path = './models/{run_id}'.format(run_id=run_id)
 summaries_dir = './summaries'
-maybe_meta_curriculum = MetaCurriculum(curriculum_file)
+maybe_meta_curriculum = None if curriculum_type is None else MetaCurriculum(curriculum_file)
 
 # My modified parameters
 trainer_config_path = 'configs/trainers/curious_trainer_config.yaml'
