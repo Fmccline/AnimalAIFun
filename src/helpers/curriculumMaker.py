@@ -43,7 +43,7 @@ def makeCurriculum(path, n_arenas):
 
 if __name__ == '__main__':
     path = './configs/curriculums/y_maze/'
-    n_arenas = 10
+    n_arenas = 50
     n_agents = 9
     makeArenas(path, n_arenas, n_agents)
     makeCurriculum(path, n_arenas)

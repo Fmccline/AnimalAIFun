@@ -3,6 +3,7 @@ import random
 from arenaToYaml import ArenaToYAML
 from yMazeArena import YMazeArena
 from tMazeArena import TMazeArena
+from radialMaze import RadialMaze
 import argparse
 
 parser = argparse.ArgumentParser(description='Arena Maker for AnimalAI')
@@ -21,7 +22,7 @@ if __name__ == '__main__':
         div_height = t_height
         random_colors = False
         arena = TMazeArena(n_arenas, time, t_width, t_height, div_height, random_colors)
-    elif args.arena == 'y_maze':
+    elif args.arena_type == 'y_maze':
         n_arenas = 5
         time = 500
         corridor_width = max_size / 4
@@ -29,4 +30,11 @@ if __name__ == '__main__':
         y_angle=30
         random_colors = False
         arena = YMazeArena(n_arenas, time, corridor_width, y_wall_length, y_angle, random_colors)
+    elif args.arena_type == 'radial_maze':
+        n_arenas = 5
+        time = 500
+        arm_width = 5
+        arm_length = 12
+        random_colors = False
+        arena = RadialMaze(n_arenas, time, arm_length, arm_width, random_colors)
     print(arena.makeYAML())

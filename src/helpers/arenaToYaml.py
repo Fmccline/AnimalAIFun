@@ -31,7 +31,7 @@ class ArenaToYAML:
 
 class Item:
 
-    NAMES = {'Agent', 'Wall', 'GoodGoal', 'BadGoal'}
+    NAMES = {'Agent', 'Wall', 'GoodGoal', 'BadGoal', 'GoodGoalMulti'}
 
     def __init__(self, name):
         if name not in self.NAMES:
