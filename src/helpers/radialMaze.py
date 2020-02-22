@@ -103,17 +103,31 @@ class RadialMaze(ArenaToYAML):
 
     def makeGoals(self):
         goals = []
-        goal_names = ['GoodGoalMulti', 'GoodGoal', 'BadGoal', None]
+        goal_names = ['GoodGoalMulti', 'BadGoal']
         goal_offset = 3
-        for rotation in range(0, 360, 45):
-            rads = rotation*2*math.pi/360
+        goal_spawns = [rotation for rotation in range(0, 360, 45)]
+        has_finish = False
+        while goal_spawns:
+            spawn = random.choice(goal_spawns)
+            rads = spawn*2*math.pi/360
             x = self.MAX_SIZE/2 + (self.apothem + self.arm_length - goal_offset)*math.cos(rads)
             y = self.MAX_SIZE/2 + (self.apothem + self.arm_length - goal_offset)*math.sin(rads)
-            goal_name = random.choice(goal_names)
+            
+            goal_name = None
+            if not has_finish:
+                goal_name = 'GoodGoal'
+                has_finish = True
+            # 50% chance to create goal at each arm
+            elif random.randint(1, 100) % 2 == 0:
+                goal_name = random.choice(goal_names)
+            # remove spawn point
+            goal_spawns.remove(spawn)
+
             if goal_name is not None:
                 goal = Item(goal_name)
                 goal.addPosition(x, 0, y)
                 goals.append(goal)
+                goal_name = random.choice(goal_names)
         return goals
 
     def makeAgent(self):
