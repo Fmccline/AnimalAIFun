@@ -9,102 +9,110 @@ import sys
 import argparse
 import datetime
 
-parser = argparse.ArgumentParser(description='My arg parser')
-parser.add_argument('-a', '--arena_config', dest='arena_config', default=None, help='Path to arena config')
+
+class UnityAgentTrainer:
+
+    ENV_PATH = '../env/AnimalAI'
+    WORKER_ID = random.randint(1, 100)
+    SEED = 10
+    BASE_PORT = 5005
+    SUB_ID = 1
+    SAVE_FREQ = 5000
+    KEEP_CHECKPOINTS = 5000
+    LESSON = 0
+    RUN_SEED = 1
+    DOCKER_TARGET_NAME = None
+    SUMMARIES_DIR = './summaries'
+
+    def __init__(self, run_id, trainer_config_path, arena_config_path, num_agents, new_model=False, watch=False, curriculum_type=None):
+        self.run_id = run_id
+
+        self.trainer_config = self.load_config(trainer_config_path)
+        self.arena_config = ArenaConfig(arena_config_path)
+
+        self.load_model = not new_model
+        self.watch = watch
+        self.number_arenas = 1 if watch_ai else num_agents
+
+        self.maybe_meta_curriculum = None if curriculum_type is None else MetaCurriculum(f'./configs/curriculums/{curriculum_type}/')
+        self.model_path = f'./models/{run_id}'
+
+
+    def load_config(self, trainer_config_path):
+        try:
+            with open(trainer_config_path) as data_file:
+                trainer_config = yaml.load(data_file)
+                return trainer_config
+        except IOError:
+            raise UnityEnvironmentException('Parameter file could not be found '
+                                            'at {}.'
+                                            .format(trainer_config_path))
+        except UnicodeDecodeError:
+            raise UnityEnvironmentException('There was an error decoding '
+                                            'Trainer Config from this path : {}'
+                                            .format(trainer_config_path))
+
+
+    def init_environment(self):
+        docker_training = self.DOCKER_TARGET_NAME is not None
+        env_path = (self.ENV_PATH.strip()
+                        .replace('.app', '')
+                        .replace('.exe', '')
+                        .replace('.x86_64', '')
+                        .replace('.x86', ''))
+
+        return UnityEnvironment(
+            n_arenas=self.number_arenas, # Change this to train on more arenas
+            file_name=env_path,
+            worker_id=self.WORKER_ID,
+            seed=self.SEED,
+            docker_training=docker_training,
+            play=False,
+            inference=self.watch # True to watch agent play
+        )
+
+    def train(self):
+        env = self.init_environment()
+
+        external_brains = {}
+        for brain_name in env.external_brain_names:
+            external_brains[brain_name] = env.brains[brain_name]
+
+        # Create controller and begin training.
+        tc = TrainerController(self.model_path, self.SUMMARIES_DIR, self.run_id + '-' + str(self.SUB_ID),
+                            self.SAVE_FREQ, self.maybe_meta_curriculum,
+                            self.load_model, not self.watch,
+                            self.KEEP_CHECKPOINTS, self.LESSON, external_brains, self.RUN_SEED, self.arena_config)
+        start = datetime.datetime.now()
+        tc.start_learning(env, self.trainer_config)
+        end = datetime.datetime.now()
+        total_time = end - start
+        print(f'Finished training after {round(total_time.seconds / 60 / 60, 3)} hours.')
+
+
+parser = argparse.ArgumentParser(description='Trainer for Unity ML Agents with the AnimalAI environment')
 parser.add_argument('-f', '--model_name', dest='model_name', help='Name of model to train.')
+parser.add_argument('-t', '--trainer_path', dest='trainer_path', default='configs/trainers/default_trainer.yaml', help='Optional path to trainer config to use.')
+parser.add_argument('-c', '--curriculum', dest='curriculum', default=None, help='Optional name of curriculum to train from')
+parser.add_argument('-a', '--arena_config', dest='arena_config', default=None, help='Path to arena config')
+parser.add_argument('-d', '--num_agents', dest='num_agents', default=None, help='Optional name of curriculum to train from', type=int)
 parser.add_argument('-w', '--watch', dest='watch_ai', default=False, action='store_true', help='Boolean for whether user wants to watch the AI or not.')
 parser.add_argument('-n', '--new_model', dest='new_model', default=False, action='store_true', help='Boolean for whether to create a new model or load from an existing model.')
-parser.add_argument('-c', '--curriculum', dest='curriculum', default=None, help='Optional name of curriculum to train from')
-parser.add_argument('-d', '--num_agents', dest='num_agents', default=None, help='Optional name of curriculum to train from', type=int)
 
-args = parser.parse_args()
+if __name__ == '__main__':
+    args = parser.parse_args()
 
-watch_ai = args.watch_ai 
-curriculum_type = args.curriculum
-if args.new_model:
-    do_it = input('Are you sure you want to create a new model? (y/n)\n')
-    new_model = True if do_it == 'y' or do_it == 'Y' else False
-else:
-    new_model = False
+    model_name = args.model_name
+    trainer_path = args.trainer_path
+    curriculum_type = args.curriculum
+    arena_config = 'configs/arenas/baseline_arena.yaml' if args.arena_config is None else args.arena_config
+    num_agents = args.num_agents
+    watch_ai = args.watch_ai 
+    if args.new_model:
+        do_it = input('Are you sure you want to create a new model? (y/n)\n')
+        new_model = True if do_it == 'y' or do_it == 'Y' else False
+    else:
+        new_model = False
 
-# ML-agents parameters for training
-env_path = '../env/AnimalAI'
-worker_id = random.randint(1, 100)
-seed = 10
-base_port = 5005
-sub_id = 1
-run_id = args.model_name
-save_freq = 5000
-curriculum_file = None if curriculum_type is None else f'./configs/curriculums/{curriculum_type}/'
-load_model = not new_model
-train_model = not watch_ai
-keep_checkpoints = 5000
-lesson = 0
-run_seed = 1
-docker_target_name = None
-model_path = './models/{run_id}'.format(run_id=run_id)
-summaries_dir = './summaries'
-maybe_meta_curriculum = None if curriculum_type is None else MetaCurriculum(curriculum_file)
-
-# My modified parameters
-trainer_config_path = 'configs/trainers/curious_trainer_config.yaml'
-default_arena = 'configs/arenas/baseline_arena.yaml'
-number_arenas = 1 if watch_ai else args.num_agents
-
-def load_config(trainer_config_path):
-    try:
-        with open(trainer_config_path) as data_file:
-            trainer_config = yaml.load(data_file)
-            return trainer_config
-    except IOError:
-        raise UnityEnvironmentException('Parameter file could not be found '
-                                        'at {}.'
-                                        .format(trainer_config_path))
-    except UnicodeDecodeError:
-        raise UnityEnvironmentException('There was an error decoding '
-                                        'Trainer Config from this path : {}'
-                                        .format(trainer_config_path))
-
-
-def init_environment(env_path, docker_target_name, worker_id, seed):
-    if env_path is not None:
-        # Strip out executable extensions if passed
-        env_path = (env_path.strip()
-                    .replace('.app', '')
-                    .replace('.exe', '')
-                    .replace('.x86_64', '')
-                    .replace('.x86', ''))
-    docker_training = docker_target_name is not None
-
-    return UnityEnvironment(
-        n_arenas=number_arenas, # Change this to train on more arenas
-        file_name=env_path,
-        worker_id=worker_id,
-        seed=seed,
-        docker_training=docker_training,
-        play=False,
-        inference=watch_ai # True to watch agent play
-    )
-
-
-# If no configuration file is provided we use the default arena
-arena = default_arena if args.arena_config is None else args.arena_config
-arena_config_in = ArenaConfig(arena)
-
-trainer_config = load_config(trainer_config_path)
-env = init_environment(env_path, docker_target_name, worker_id, run_seed)
-
-external_brains = {}
-for brain_name in env.external_brain_names:
-    external_brains[brain_name] = env.brains[brain_name]
-
-# Create controller and begin training.
-tc = TrainerController(model_path, summaries_dir, run_id + '-' + str(sub_id),
-                       save_freq, maybe_meta_curriculum,
-                       load_model, train_model,
-                       keep_checkpoints, lesson, external_brains, run_seed, arena_config_in)
-start = datetime.datetime.now()
-tc.start_learning(env, trainer_config)
-end = datetime.datetime.now()
-total_time = end - start
-print(f'Finished training after {round(total_time.seconds / 60 / 60, 3)} hours.')
+    trainer = UnityAgentTrainer(model_name, trainer_path, arena_config, num_agents, new_model, watch_ai, curriculum_type)
+    trainer.train()
