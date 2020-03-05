@@ -7,11 +7,12 @@ class TMazeArena(ArenaToYAML):
     WALL_THICKNESS = 0.2
     WALL_HEIGHT = 7
 
-    def __init__(self, n_arenas, time, t_width, t_height, div_height, random_colors):
+    def __init__(self, n_arenas, time, t_width, t_height, div_height, end_left, random_colors):
         super().__init__()
         self.t_width = t_width
         self.t_height = t_height
         self.div_height = div_height
+        self.end_left = end_left
         self.random_colors = random_colors
         for _ in range(n_arenas):
             items = self.makeItems()
@@ -78,7 +79,7 @@ class TMazeArena(ArenaToYAML):
     def makeGoals(self):
         offset = 3
         goalPositions = [offset, self.MAX_SIZE - offset]
-        goodPos = random.choice(goalPositions)
+        goodPos = goalPositions[0] if self.end_left else goalPositions[1]
         badPos = goalPositions[0] if goalPositions[0] != goodPos else goalPositions[1]
         zPos= self.t_height + (self.MAX_SIZE - self.t_height)/2
         

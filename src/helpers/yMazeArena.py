@@ -7,11 +7,12 @@ class YMazeArena(ArenaToYAML):
     WALL_THICKNESS = 0.2
     WALL_HEIGHT = 7
 
-    def __init__(self, n_arenas, time, corridor_width, y_wall_length, y_angle, random_colors):
+    def __init__(self, n_arenas, time, corridor_width, y_wall_length, y_angle, end_left, random_colors):
         super().__init__()
         self.corridor_width = corridor_width
         self.y_wall_length = y_wall_length
         self.y_angle = y_angle
+        self.end_left = end_left
         self.random_colors = random_colors
         for _ in range(n_arenas):
             items = self.makeItems()
@@ -85,7 +86,7 @@ class YMazeArena(ArenaToYAML):
 
     def makeGoals(self):
         delta_x = math.sin(self.y_angle/2 * 2*math.pi/360) * self.y_wall_length + self.corridor_width/4
-        delta_x = delta_x * random.choice([1, -1]) # randomize start of good/bad goal
+        delta_x *= 1 if self.end_left else -1
         x = 20
         y = 0
         z = 38

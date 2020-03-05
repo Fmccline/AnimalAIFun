@@ -1,75 +1,70 @@
-from yMazeArena import YMazeArena
-from tMazeArena import TMazeArena
-from arenaToYaml import ArenaToYAML
+from arenaMaker import ArenaMaker
+import argparse
 import json
 
-def makeArena(curriculum_type, n_arenas, time):
-    arena = None
-    random_colors = False
-    if curriculum_type == 'y_maze':
-        corridor_width = ArenaToYAML.MAX_SIZE / 4
-        y_wall_length=15
-        y_angle=30
-        arena = YMazeArena(n_arenas, time, corridor_width, y_wall_length, y_angle, random_colors)
-    elif curriculum_type == 't_maze':
-        t_width = 10
-        t_height = 20
-        div_height = 20
-        arena = TMazeArena(n_arenas, time, t_width, t_height, div_height, random_colors)
-    else:
-        raise ValueError(f'Invalid curriculum type {curriculum_type}')
-    return arena
 
-def makeArenas(path, curriculum_type, n_files, n_arenas, time):
-    for n in range(n_files):
-        arena = makeArena(curriculum_type, n_arenas, time)
-        file_name = f'{path}{curriculum_type}{n}.yaml'
+class CurriculumMaker:
+
+    def __init__(self, curriculum_type, n_files, n_arenas, time):
+        self.curriculum_type = curriculum_type
+        self.n_files = n_files
+        self.path = f'../configs/curriculums/{curriculum_type}/'
+        self.arena_maker = ArenaMaker(n_arenas, time)
+
+
+    def makeArena(self):
+        return self.arena_maker.make_arena(self.curriculum_type)
+
+
+    def makeArenas(self):
+        for n in range(self.n_files):
+            arena = self.makeArena()
+            file_name = f'{self.path}{self.curriculum_type}{n}.yaml'
+            with open(file_name, 'w') as file:
+                file.write(arena.makeYAML())
+                print(f'Wrote arena to {file_name}')
+
+
+    def makeCurriculum(self):
+        self.makeArenas()
+
+        MEASURE = 'measure'
+        THRESHOLDS = 'thresholds'
+        CONFIG_FILES = 'configuration_files'
+        MIN_LESSON_LEN = 'min_lesson_length'
+        SIGNAL_SMOOTHING = 'signal_smoothing'
+        learner = {}
+        learner[MIN_LESSON_LEN] = 100
+        learner[SIGNAL_SMOOTHING] = True
+        learner[MEASURE] = 'progress'
+        learner[THRESHOLDS] = []
+        learner[CONFIG_FILES] = []
+        for n in range(self.n_files):
+            file_name = f'{self.curriculum_type}{n}.yaml'
+            learner[CONFIG_FILES].append(file_name)
+            if n > 0:
+                learner[THRESHOLDS].append(n / self.n_files)
+
+        file_name = f'{self.path}Learner.json'
         with open(file_name, 'w') as file:
-            file.write(arena.makeYAML())
-            print(f'Wrote arena to {file_name}')
-
-
-def makeCurriculum(path, curriculum_type, n_files):
-    MEASURE = 'measure'
-    THRESHOLDS = 'thresholds'
-    CONFIG_FILES = 'configuration_files'
-    MIN_LESSON_LEN = 'min_lesson_length'
-    SIGNAL_SMOOTHING = 'signal_smoothing'
-    learner = {}
-    learner[MIN_LESSON_LEN] = 100
-    learner[SIGNAL_SMOOTHING] = True
-    learner[MEASURE] = 'progress'
-    learner[THRESHOLDS] = []
-    learner[CONFIG_FILES] = []
-    for n in range(n_files):
-        file_name = f'{curriculum_type}{n}.yaml'
-        learner[CONFIG_FILES].append(file_name)
-        if n > 0:
-            learner[THRESHOLDS].append(n / n_files)
-
-    file_name = f'{path}Learner.json'
-    with open(file_name, 'w') as file:
-        file.write(json.dumps(learner))
-        print(f'Wrote Learner to {file_name}')
-
-
-import argparse
-
-parser = argparse.ArgumentParser('Curriculum maker')
-parser.add_argument('-c', '--curriculum', help='Type of curriculum to make')
-parser.add_argument('-n', '--num_arenas', help='Number of arenas per file.', type=int)
-parser.add_argument('-f', '--num_files', help='Number of files to make.', type=int)
-parser.add_argument('-t', '--time', help='Time limit of each arena.', type=int, default=500)
-
-args = parser.parse_args()
+            file.write(json.dumps(learner))
+            print(f'Wrote Learner to {file_name}')
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Curriculum maker')
+    parser.add_argument('-c', '--curriculum', help='Type of curriculum to make (y_maze, t_maze, radial_maze)')
+    parser.add_argument('-n', '--num_arenas', help='Number of arenas per file.', type=int)
+    parser.add_argument('-f', '--num_files', help='Number of files to make (curriculum will change this many times).', type=int)
+    parser.add_argument('-t', '--time', help='Time limit of each arena.', type=int, default=500)
+
+    args = parser.parse_args()
+
     curriculum = args.curriculum
-    num_arenas = args.num_arenas
     num_files = args.num_files
+    num_arenas = args.num_arenas
     time = args.time
 
-    path = f'./configs/curriculums/{curriculum}/'
-    makeArenas(path, curriculum, num_files, num_arenas, time)
-    makeCurriculum(path, curriculum, num_files)
+    curriculum_maker = CurriculumMaker(curriculum, num_files, num_arenas, time)
+
+    curriculum_maker.makeCurriculum()
