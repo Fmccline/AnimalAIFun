@@ -14,7 +14,7 @@ import datetime
 
 class DumbAgentRunner:
 
-    ENV_PATH = '../../env/AnimalAI'
+    ENV_PATH = '../env/AnimalAI'
     WORKER_ID = random.randint(1, 100)
     SEED = 10
 
@@ -63,7 +63,7 @@ class DumbAgentRunner:
 
 
 if __name__ == '__main__':
-    arena_path = '../configs/arenas/baseline_arena.yaml'
+    arena_path = '/configs/arenas/baseline_arena.yaml'
     num_agents = 1
     runner = DumbAgentRunner(arena_path, num_agents, watch=True)
     runner.run()

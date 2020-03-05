@@ -1,4 +1,5 @@
 from unityAgentTrainer import UnityAgentTrainer
+from dumbAgentRunner import DumbAgentRunner
 import dopamineAgentTrainer
 from dopamineAgentTrainer import DopamineAgentTrainer
 import argparse
@@ -21,6 +22,8 @@ def train_model(args):
         new_model = True
     elif args.new_model:
         new_model = True if input('Are you sure you want to create a new model?\n(y/n): ') == ('y' or 'Y') else False
+    else:
+        new_model = False
 
     model_name = args.model_name
     curriculum_type = args.curriculum
@@ -33,6 +36,8 @@ def train_model(args):
         train_ppo_model(model_name, curriculum_type, arena_config, num_agents, watch_ai, trainer_path, new_model)
     elif model_type == 'dopamine':
         train_dopamine_model(arena_config, trainer_path)
+    elif model_type == 'dumb':
+        train_dumb_model(arena_config)
     else:
         raise ValueError(f'Invalid model type {model_type}')
 
@@ -45,6 +50,11 @@ def train_ppo_model(model_name, curriculum_type, arena_config, num_agents, watch
 def train_dopamine_model(arena_config, gin_path):
     trainer = DopamineAgentTrainer(arena_config, gin_path)
     time_training(trainer)
+
+
+def train_dumb_model(arena_config):
+    runner = DumbAgentRunner(arena_config, num_agents=1, watch=True)
+    runner.run()
 
 
 def time_training(trainer):
